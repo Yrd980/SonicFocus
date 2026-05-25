@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SonicFocus - Live Listening</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#004395",
+                    "tertiary-container": "#00a572",
+                    "tertiary-fixed": "#6ffbbe",
+                    "error": "#ffb4ab",
+                    "tertiary": "#4edea3",
+                    "outline-variant": "#424754",
+                    "on-secondary": "#3c0091",
+                    "on-primary-fixed": "#001a42",
+                    "inverse-primary": "#005ac2",
+                    "primary-container": "#4d8eff",
+                    "on-secondary-container": "#c4abff",
+                    "on-surface-variant": "#c2c6d6",
+                    "on-error-container": "#ffdad6",
+                    "inverse-surface": "#e5e2e3",
+                    "primary": "#adc6ff",
+                    "secondary": "#d0bcff",
+                    "surface-container-high": "#2a2a2b",
+                    "on-tertiary": "#003824",
+                    "background": "#131314",
+                    "on-tertiary-fixed": "#002113",
+                    "surface-variant": "#353436",
+                    "surface-dim": "#131314",
+                    "on-primary-container": "#00285d",
+                    "on-secondary-fixed-variant": "#5516be",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "primary-fixed": "#d8e2ff",
+                    "on-primary": "#002e6a",
+                    "surface-tint": "#adc6ff",
+                    "secondary-container": "#571bc1",
+                    "outline": "#8c909f",
+                    "inverse-on-surface": "#313031",
+                    "surface-container-lowest": "#0e0e0f",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "secondary-fixed-dim": "#d0bcff",
+                    "on-secondary-fixed": "#23005c",
+                    "on-error": "#690005",
+                    "surface-bright": "#3a393a",
+                    "primary-fixed-dim": "#adc6ff",
+                    "secondary-fixed": "#e9ddff",
+                    "on-surface": "#e5e2e3",
+                    "surface-container-low": "#1c1b1c",
+                    "error-container": "#93000a",
+                    "surface-container": "#201f20",
+                    "on-tertiary-container": "#00311f",
+                    "surface": "#131314",
+                    "on-background": "#e5e2e3",
+                    "surface-container-highest": "#353436"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "section-gap": "64px",
+                    "container-padding-mobile": "20px",
+                    "container-padding-desktop": "40px",
+                    "unit": "8px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "label-md": ["Geist"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "mono-technical": ["Geist"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "mono-technical": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0A0A0B;
+            color: #e5e2e3;
+            overflow-x: hidden;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(30px);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+        }
+        .active-glow {
+            border: 1px solid rgba(173, 198, 255, 0.4);
+            box-shadow: 0 0 20px rgba(173, 198, 255, 0.15);
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .waveform-bar {
+            width: 2px;
+            background: #adc6ff;
+            border-radius: 1px;
+            transition: height 0.2s ease;
+        }
+        .visualizer-circle {
+            background: radial-gradient(circle, rgba(173, 198, 255, 0.1) 0%, transparent 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md selection:bg-primary/30">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-surface/30 backdrop-blur-[30px] border-b border-white/10 shadow-[0_4px_20px_rgba(173,198,255,0.05)] flex justify-between items-center px-container-padding-mobile h-16">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+<span class="text-headline-lg-mobile font-headline-lg-mobile font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">SonicFocus</span>
+</div>
+<div class="h-10 w-10 rounded-full border border-white/10 overflow-hidden bg-surface-container">
+<img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJUzuCebTQQBQ8b65gub2B-oA3mql39V8Z2a2wCtS5bUEH2TVTCqqHGKDwo04TXsAL7dnbAH6SgZEQHFlxb02wxj12IYIAmRZeEAJO3Bhb-V1P0XNB33zTfSu6xNeum3oWbBYkLs0FYck8DqY39AIDS1335VlJCjXMLm0oek8jFke55GYGRxmYaXy5uoJt0gtSF3Jh0FeIr5e7Bd-e1LbmVsihzUcDq39f-pr3CYn4vXaEG0YZTu0k6M0aisoUFHMh256dv33SzY2i"/>
+</div>
+</header>
+<main class="pt-24 pb-32 px-container-padding-mobile max-w-4xl mx-auto space-y-12">
+<!-- Large Center Visualizer -->
+<section class="flex flex-col items-center justify-center min-h-[353px] relative">
+<div class="absolute inset-0 visualizer-circle animate-pulse-ring rounded-full w-64 h-64 mx-auto my-auto opacity-50"></div>
+<div class="relative w-64 h-64 flex items-center justify-center border border-primary/20 rounded-full glass-panel">
+<!-- Circular Visualizer Segments -->
+<div class="flex items-end gap-1 h-32" id="circle-visualizer">
+<!-- Script will inject bars here for animation -->
+</div>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="material-symbols-outlined text-primary text-4xl animate-pulse" style="font-variation-settings: 'FILL' 1;">hearing</span>
+</div>
+</div>
+<div class="mt-8 text-center space-y-2">
+<p class="text-primary font-mono-technical text-mono-technical tracking-widest uppercase animate-pulse">Live Analysis</p>
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Listening to your environment...</h2>
+</div>
+</section>
+<!-- Detected Voices Section -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface">Detected Voices</h3>
+<span class="text-label-md font-label-md text-on-surface-variant/70">3 Active Sources</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Voice A - Active -->
+<div class="glass-panel active-glow p-6 rounded-xl space-y-4 cursor-pointer active:scale-95 duration-200 transition-all border-l-4 border-l-primary">
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<span class="text-label-md font-label-md text-primary bg-primary/10 px-2 py-0.5 rounded">Speaking Now</span>
+<h4 class="text-on-surface font-bold text-lg">Voice A</h4>
+</div>
+<div class="text-right">
+<p class="text-mono-technical font-mono-technical text-primary">92%</p>
+<p class="text-[10px] text-on-surface-variant/60 uppercase">Confidence</p>
+</div>
+</div>
+<div class="flex items-center gap-1 h-8">
+<!-- Tiny Waveform Preview -->
+<div class="waveform-bar h-6 animate-[bounce_1.2s_infinite]"></div>
+<div class="waveform-bar h-8 animate-[bounce_1s_infinite]"></div>
+<div class="waveform-bar h-4 animate-[bounce_1.5s_infinite]"></div>
+<div class="waveform-bar h-7 animate-[bounce_1.1s_infinite]"></div>
+<div class="waveform-bar h-5 animate-[bounce_1.3s_infinite]"></div>
+<div class="waveform-bar h-8 animate-[bounce_0.9s_infinite]"></div>
+<div class="waveform-bar h-3 animate-[bounce_1.4s_infinite]"></div>
+</div>
+</div>
+<!-- Voice B -->
+<div class="glass-panel p-6 rounded-xl space-y-4 cursor-pointer hover:bg-white/5 active:scale-95 duration-200 transition-all">
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<span class="text-label-md font-label-md text-on-surface-variant/60">Nearby</span>
+<h4 class="text-on-surface font-bold text-lg">Voice B</h4>
+</div>
+<div class="text-right">
+<p class="text-mono-technical font-mono-technical text-on-surface-variant">81%</p>
+<p class="text-[10px] text-on-surface-variant/60 uppercase">Confidence</p>
+</div>
+</div>
+<div class="flex items-center gap-1 h-8 opacity-40">
+<div class="waveform-bar h-4"></div>
+<div class="waveform-bar h-2"></div>
+<div class="waveform-bar h-5"></div>
+<div class="waveform-bar h-3"></div>
+<div class="waveform-bar h-4"></div>
+<div class="waveform-bar h-2"></div>
+<div class="waveform-bar h-3"></div>
+</div>
+</div>
+<!-- Voice C -->
+<div class="glass-panel p-6 rounded-xl space-y-4 cursor-pointer hover:bg-white/5 active:scale-95 duration-200 transition-all">
+<div class="flex justify-between items-start">
+<div class="space-y-1">
+<span class="text-label-md font-label-md text-on-surface-variant/60">Background</span>
+<h4 class="text-on-surface font-bold text-lg">Voice C</h4>
+</div>
+<div class="text-right">
+<p class="text-mono-technical font-mono-technical text-on-surface-variant">64%</p>
+<p class="text-[10px] text-on-surface-variant/60 uppercase">Confidence</p>
+</div>
+</div>
+<div class="flex items-center gap-1 h-8 opacity-20">
+<div class="waveform-bar h-2"></div>
+<div class="waveform-bar h-2"></div>
+<div class="waveform-bar h-3"></div>
+<div class="waveform-bar h-2"></div>
+<div class="waveform-bar h-2"></div>
+<div class="waveform-bar h-1"></div>
+<div class="waveform-bar h-2"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main CTA -->
+<section class="flex flex-col items-center pt-8">
+<button class="group relative w-full md:w-80 px-8 py-5 bg-gradient-to-r from-primary-container to-secondary-container rounded-full text-on-primary-container font-bold text-lg shadow-[0_8px_32px_rgba(77,142,255,0.3)] hover:shadow-[0_12px_40px_rgba(77,142,255,0.5)] transition-all active:scale-95 flex items-center justify-center gap-3 overflow-hidden">
+<span class="relative z-10">Focus This Voice</span>
+<span class="material-symbols-outlined relative z-10 transition-transform group-hover:translate-x-1" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+<div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</button>
+<p class="mt-4 text-on-surface-variant/50 text-label-md font-label-md">Isolation active: Voice A optimized</p>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface/30 backdrop-blur-[30px] border-t border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] flex justify-around items-center h-20 px-4 pb-safe rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-primary bg-primary-container/20 rounded-xl px-4 py-1 shadow-[0_0_15px_rgba(173,198,255,0.2)] active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">hearing</span>
+<span class="text-label-md font-label-md">Listen</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined">record_voice_over</span>
+<span class="text-label-md font-label-md">Voices</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 duration-300" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction: Animated Circle Visualizer
+        const visualizer = document.getElementById('circle-visualizer');
+        const barCount = 16;
+        
+        for (let i = 0; i < barCount; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'waveform-bar w-2';
+            bar.style.height = `${Math.random() * 60 + 20}px`;
+            visualizer.appendChild(bar);
+        }
+
+        function animateVisualizer() {
+            const bars = visualizer.querySelectorAll('.waveform-bar');
+            bars.forEach(bar => {
+                const height = Math.random() * 80 + 10;
+                bar.style.height = `${height}px`;
+            });
+        }
+
+        setInterval(animateVisualizer, 150);
+
+        // Selection micro-interaction for cards
+        const cards = document.querySelectorAll('.glass-panel.rounded-xl');
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                cards.forEach(c => {
+                    c.classList.remove('active-glow', 'border-l-4', 'border-l-primary');
+                    c.querySelector('.waveform-bar')?.classList.remove('animate-[bounce_1s_infinite]', 'animate-[bounce_1.2s_infinite]', 'animate-[bounce_1.5s_infinite]', 'animate-[bounce_1.1s_infinite]', 'animate-[bounce_1.3s_infinite]', 'animate-[bounce_0.9s_infinite]', 'animate-[bounce_1.4s_infinite]');
+                });
+                card.classList.add('active-glow', 'border-l-4', 'border-l-primary');
+                // Re-add animations only to active bars
+                const activeBars = card.querySelectorAll('.waveform-bar');
+                activeBars.forEach((bar, i) => {
+                    bar.classList.add(`animate-[bounce_${(0.8 + i * 0.1).toFixed(1)}s_infinite]`);
+                });
+            });
+        });
+    </script>
+</body></html>
