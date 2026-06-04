@@ -18,11 +18,15 @@ class GlassPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final glow = active ? const Color(0xFFADC6FF).withValues(alpha: 0.18) : Colors.transparent;
+    final glow = active
+        ? const Color(0xFFADC6FF).withValues(alpha: 0.18)
+        : Colors.transparent;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: [BoxShadow(color: glow, blurRadius: 20, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(color: glow, blurRadius: 20, offset: const Offset(0, 4))
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
@@ -39,7 +43,8 @@ class GlassPanel extends StatelessWidget {
               ),
               color: const Color(0x08FFFFFF),
               border: Border.all(
-                color: active ? const Color(0x55ADC6FF) : const Color(0x1AFFFFFF),
+                color:
+                    active ? const Color(0x55ADC6FF) : const Color(0x1AFFFFFF),
                 width: active ? 1 : 0.8,
               ),
             ),

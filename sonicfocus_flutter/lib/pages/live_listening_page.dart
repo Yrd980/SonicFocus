@@ -1,50 +1,235 @@
 import 'package:flutter/material.dart';
 
+import '../features/voice_selector/controller/voice_selector_controller.dart';
+import '../features/voice_selector/model/voice_line.dart';
 import '../theme/sonicfocus_theme.dart';
+import '../ui/components/audio_bars.dart';
 import '../ui/components/glass_panel.dart';
 import 'focus_mode_page.dart';
 
-class LiveListeningPage extends StatelessWidget {
+class LiveListeningPage extends StatefulWidget {
   const LiveListeningPage({super.key});
   static const routeName = '/live-listening';
+
+  @override
+  State<LiveListeningPage> createState() => _LiveListeningPageState();
+}
+
+class _LiveListeningPageState extends State<LiveListeningPage> {
+  late VoiceLine selectedVoice;
+  bool initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (initialized) return;
+    final routeVoice = ModalRoute.of(context)?.settings.arguments;
+    selectedVoice = routeVoice is VoiceLine ? routeVoice : demoVoiceLines.first;
+    initialized = true;
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = context.sf;
     return Scaffold(
       appBar: AppBar(title: const Text('Live Listening')),
-      body: Padding(
-        padding: EdgeInsets.all(t.containerPadding),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Listening to your environment...', style: Theme.of(context).textTheme.headlineLarge),
-          const SizedBox(height: 16),
-          GlassPanel(
-            child: SizedBox(
-              height: 180,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(36, (i) {
-                  final h = 24.0 + (i % 7) * 14.0;
-                  return Container(
-                    width: 3,
-                    height: h,
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      gradient: const LinearGradient(begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Color(0xFFADC6FF), Color(0xFFD0BCFF)]),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(t.containerPadding),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 920),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    GlassPanel(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 32),
+                      active: true,
+                      child: Column(children: [
+                        Icon(Icons.hearing, color: t.primary, size: 44),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Live Analysis',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(color: t.primary, letterSpacing: 2),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Listening to your environment...',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        const SizedBox(height: 24),
+                        const AudioBars(
+                          values: [
+                            3,
+                            5,
+                            7,
+                            4,
+                            8,
+                            6,
+                            5,
+                            7,
+                            3,
+                            6,
+                            8,
+                            4,
+                            5,
+                            7,
+                            6,
+                            3,
+                            5,
+                            8
+                          ],
+                          height: 112,
+                        ),
+                      ]),
                     ),
-                  );
-                }),
-              ),
+                    const SizedBox(height: 32),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Detected Voices',
+                              style:
+                                  Theme.of(context).textTheme.headlineMedium),
+                          Text(
+                            '${demoVoiceLines.length} Active Sources',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(color: t.onSurfaceVariant),
+                          ),
+                        ]),
+                    const SizedBox(height: 16),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth >= 720;
+                        final cards =
+                            demoVoiceLines.map((voice) => _VoiceSourceCard(
+                                  voice: voice.copyWith(
+                                      isSelected: voice.id == selectedVoice.id),
+                                  onTap: () =>
+                                      setState(() => selectedVoice = voice),
+                                ));
+
+                        if (!isWide) {
+                          return Column(
+                            children: cards
+                                .map(
+                                  (card) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: card,
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        }
+
+                        final cardList = cards.toList();
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (var i = 0; i < cardList.length; i++)
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                      right: i == cardList.length - 1 ? 0 : 12),
+                                  child: cardList[i],
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    FilledButton.icon(
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        FocusModePage.routeName,
+                        arguments: selectedVoice,
+                      ),
+                      icon: const Icon(Icons.graphic_eq),
+                      label: Text('Focus ${selectedVoice.label}'),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Isolation ready: ${selectedVoice.label} optimized',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: t.onSurfaceVariant.withValues(alpha: 0.7)),
+                    ),
+                  ]),
             ),
           ),
-          const SizedBox(height: 16),
-          Text('Detected voices are continuously clustered and tracked.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: t.onSurfaceVariant)),
-          const Spacer(),
-          FilledButton(onPressed: () => Navigator.pushNamed(context, FocusModePage.routeName), child: const Text('Open Focus Mode')),
+        ),
+      ),
+    );
+  }
+}
+
+class _VoiceSourceCard extends StatelessWidget {
+  const _VoiceSourceCard({
+    required this.voice,
+    required this.onTap,
+  });
+
+  final VoiceLine voice;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.sf;
+    return InkWell(
+      borderRadius: BorderRadius.circular(t.panelRadius),
+      onTap: onTap,
+      child: GlassPanel(
+        active: voice.isSelected,
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(
+                    _status(voice.status),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: voice.isSelected
+                              ? t.primary
+                              : t.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(voice.label,
+                      style: Theme.of(context).textTheme.headlineMedium),
+                ])),
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              Text(
+                '${(voice.confidence * 100).toStringAsFixed(0)}%',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: voice.isSelected ? t.primary : t.onSurfaceVariant),
+              ),
+              Text(
+                'Confidence',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: t.onSurfaceVariant.withValues(alpha: 0.6)),
+              ),
+            ]),
+          ]),
+          const SizedBox(height: 20),
+          AudioBars(values: voice.waveform, dimmed: !voice.isSelected),
         ]),
       ),
     );
   }
+
+  String _status(VoiceStatus s) => switch (s) {
+        VoiceStatus.speakingNow => 'Speaking Now',
+        VoiceStatus.nearby => 'Nearby',
+        VoiceStatus.background => 'Background',
+        VoiceStatus.noisy => 'Noisy',
+      };
 }

@@ -18,6 +18,6 @@
 - [x] 玻璃态 + glow 组件升级
 - [x] Onboarding 视觉对齐加强
 - [x] Voice Profiles 声线选择交互对齐加强
-- [ ] Live Listening 页面深度对齐
-- [ ] Focus Mode 页面深度对齐
+- [x] Live Listening 页面深度对齐
+- [x] Focus Mode 页面深度对齐
 - [ ] 逐像素截图比对

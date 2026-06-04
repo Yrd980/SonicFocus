@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../features/voice_selector/controller/voice_selector_controller.dart';
 import '../features/voice_selector/model/voice_line.dart';
 import '../theme/sonicfocus_theme.dart';
+import '../ui/components/audio_bars.dart';
 import '../ui/components/glass_panel.dart';
 import 'live_listening_page.dart';
 
@@ -35,19 +36,42 @@ class _VoiceProfilesPageState extends State<VoiceProfilesPage> {
                     child: GlassPanel(
                       active: voice.isSelected,
                       child: Row(children: [
-                        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(voice.label, style: Theme.of(context).textTheme.headlineMedium),
-                          const SizedBox(height: 4),
-                          Text(_status(voice.status), style: Theme.of(context).textTheme.labelMedium?.copyWith(color: t.onSurfaceVariant)),
-                        ])),
-                        Text('${(voice.confidence * 100).toStringAsFixed(0)}%', style: Theme.of(context).textTheme.labelMedium?.copyWith(color: t.primary)),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(voice.label,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium),
+                              const SizedBox(height: 4),
+                              Text(_status(voice.status),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(color: t.onSurfaceVariant)),
+                              const SizedBox(height: 12),
+                              AudioBars(
+                                  values: voice.waveform,
+                                  height: 36,
+                                  dimmed: !voice.isSelected),
+                            ])),
+                        Text('${(voice.confidence * 100).toStringAsFixed(0)}%',
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(color: t.primary)),
                       ]),
                     ),
                   ),
                 )),
             const Spacer(),
             FilledButton(
-              onPressed: () => Navigator.pushNamed(context, LiveListeningPage.routeName),
+              onPressed: () => Navigator.pushNamed(
+                context,
+                LiveListeningPage.routeName,
+                arguments: controller.selectedVoice,
+              ),
               child: Text('Focus ${controller.selectedVoice.label}'),
             )
           ]),
