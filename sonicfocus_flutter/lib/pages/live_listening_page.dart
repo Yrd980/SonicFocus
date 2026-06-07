@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/voice_selector/controller/voice_selector_controller.dart';
+import '../features/voice_selector/controller/focus_session_controller.dart';
 import '../features/voice_selector/model/voice_line.dart';
 import '../theme/sonicfocus_theme.dart';
 import '../ui/components/audio_bars.dart';
@@ -16,16 +16,26 @@ class LiveListeningPage extends StatefulWidget {
 }
 
 class _LiveListeningPageState extends State<LiveListeningPage> {
-  late VoiceLine selectedVoice;
+  late FocusSessionController controller;
   bool initialized = false;
+  bool ownsController = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (initialized) return;
-    final routeVoice = ModalRoute.of(context)?.settings.arguments;
-    selectedVoice = routeVoice is VoiceLine ? routeVoice : demoVoiceLines.first;
+    final routeArg = ModalRoute.of(context)?.settings.arguments;
+    controller =
+        routeArg is FocusSessionController ? routeArg : FocusSessionController()
+          ..start();
+    ownsController = routeArg is! FocusSessionController;
     initialized = true;
+  }
+
+  @override
+  void dispose() {
+    if (ownsController) controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -33,135 +43,126 @@ class _LiveListeningPageState extends State<LiveListeningPage> {
     final t = context.sf;
     return Scaffold(
       appBar: AppBar(title: const Text('Live Listening')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(t.containerPadding),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 920),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    GlassPanel(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 32),
-                      active: true,
-                      child: Column(children: [
-                        Icon(Icons.hearing, color: t.primary, size: 44),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Live Analysis',
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
-                              ?.copyWith(color: t.primary, letterSpacing: 2),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Listening to your environment...',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                        const SizedBox(height: 24),
-                        const AudioBars(
-                          values: [
-                            3,
-                            5,
-                            7,
-                            4,
-                            8,
-                            6,
-                            5,
-                            7,
-                            3,
-                            6,
-                            8,
-                            4,
-                            5,
-                            7,
-                            6,
-                            3,
-                            5,
-                            8
-                          ],
-                          height: 112,
-                        ),
-                      ]),
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Detected Voices',
-                              style:
-                                  Theme.of(context).textTheme.headlineMedium),
+      body: AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) => SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(t.containerPadding),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 920),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      GlassPanel(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 32),
+                        active: true,
+                        child: Column(children: [
+                          Icon(Icons.hearing, color: t.primary, size: 44),
+                          const SizedBox(height: 16),
                           Text(
-                            '${demoVoiceLines.length} Active Sources',
+                            'Live Analysis',
                             style: Theme.of(context)
                                 .textTheme
-                                .labelMedium
-                                ?.copyWith(color: t.onSurfaceVariant),
+                                .labelSmall
+                                ?.copyWith(color: t.primary, letterSpacing: 2),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Listening to your environment...',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                          const SizedBox(height: 24),
+                          AudioBars(
+                            values: controller.selectedVoice.waveform,
+                            height: 112,
                           ),
                         ]),
-                    const SizedBox(height: 16),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 720;
-                        final cards =
-                            demoVoiceLines.map((voice) => _VoiceSourceCard(
-                                  voice: voice.copyWith(
-                                      isSelected: voice.id == selectedVoice.id),
-                                  onTap: () =>
-                                      setState(() => selectedVoice = voice),
-                                ));
-
-                        if (!isWide) {
-                          return Column(
-                            children: cards
-                                .map(
-                                  (card) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: card,
-                                  ),
-                                )
-                                .toList(),
-                          );
-                        }
-
-                        final cardList = cards.toList();
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (var i = 0; i < cardList.length; i++)
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                      right: i == cardList.length - 1 ? 0 : 12),
-                                  child: cardList[i],
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    FilledButton.icon(
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        FocusModePage.routeName,
-                        arguments: selectedVoice,
                       ),
-                      icon: const Icon(Icons.graphic_eq),
-                      label: Text('Focus ${selectedVoice.label}'),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Isolation ready: ${selectedVoice.label} optimized',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: t.onSurfaceVariant.withValues(alpha: 0.7)),
-                    ),
-                  ]),
+                      const SizedBox(height: 32),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Detected Voices',
+                                style:
+                                    Theme.of(context).textTheme.headlineMedium),
+                            Text(
+                              '${controller.voices.length} Active Sources',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(color: t.onSurfaceVariant),
+                            ),
+                          ]),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth >= 720;
+                          final cards =
+                              controller.voices.map((voice) => _VoiceSourceCard(
+                                    voice: voice.copyWith(
+                                        isSelected: voice.id ==
+                                            controller.selectedVoice.id),
+                                    onTap: () =>
+                                        controller.selectVoice(voice.id),
+                                  ));
+
+                          if (!isWide) {
+                            return Column(
+                              children: cards
+                                  .map(
+                                    (card) => Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 12),
+                                      child: card,
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          }
+
+                          final cardList = cards.toList();
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (var i = 0; i < cardList.length; i++)
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                        right:
+                                            i == cardList.length - 1 ? 0 : 12),
+                                    child: cardList[i],
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      FilledButton.icon(
+                        onPressed: () => Navigator.pushNamed(
+                          context,
+                          FocusModePage.routeName,
+                          arguments: controller,
+                        ),
+                        icon: const Icon(Icons.graphic_eq),
+                        label: Text('Focus ${controller.selectedVoice.label}'),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Isolation ready: ${controller.selectedVoice.label} optimized',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelMedium
+                            ?.copyWith(
+                                color:
+                                    t.onSurfaceVariant.withValues(alpha: 0.7)),
+                      ),
+                    ]),
+              ),
             ),
           ),
         ),
@@ -231,5 +232,6 @@ class _VoiceSourceCard extends StatelessWidget {
         VoiceStatus.nearby => 'Nearby',
         VoiceStatus.background => 'Background',
         VoiceStatus.noisy => 'Noisy',
+        VoiceStatus.lost => 'Lost',
       };
 }
